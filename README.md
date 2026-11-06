@@ -162,7 +162,8 @@ The suite needs a public URL. Run the server locally and expose it with a
 which needs no account:
 
 ```bash
-npm run build && npm start
+npm run build
+npm start
 ```
 
 In another terminal:
