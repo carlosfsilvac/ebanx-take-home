@@ -1,8 +1,17 @@
-import { AccountNotFoundError, InsufficientFundsError } from "./errors.js";
+import {
+  AccountNotFoundError,
+  InsufficientFundsError,
+  SameAccountTransferError,
+} from "./errors.js";
 
 export interface Account {
   readonly id: string;
   readonly balance: number;
+}
+
+export interface TransferResult {
+  readonly origin: Account;
+  readonly destination: Account;
 }
 
 export class Bank {
@@ -27,6 +36,22 @@ export class Bank {
       throw new InsufficientFundsError(accountId, current, amount);
     }
     return this.#setBalance(accountId, current - amount);
+  }
+
+  transfer(
+    originId: string,
+    destinationId: string,
+    amount: number,
+  ): TransferResult {
+    if (originId === destinationId) {
+      throw new SameAccountTransferError(originId);
+    }
+    // Atomic without a rollback: every check that can fail runs inside
+    // withdraw before it writes, and deposit cannot fail afterwards. Being
+    // synchronous, nothing else can run between the two writes.
+    const origin = this.withdraw(originId, amount);
+    const destination = this.deposit(destinationId, amount);
+    return { origin, destination };
   }
 
   #setBalance(accountId: string, balance: number): Account {

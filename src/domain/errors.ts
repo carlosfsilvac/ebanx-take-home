@@ -17,3 +17,10 @@ export class InsufficientFundsError extends Error {
     this.name = "InsufficientFundsError";
   }
 }
+
+export class SameAccountTransferError extends Error {
+  constructor(readonly accountId: string) {
+    super(`Cannot transfer from account ${accountId} to itself`);
+    this.name = "SameAccountTransferError";
+  }
+}

@@ -3,6 +3,7 @@ import { Bank } from "../src/domain/bank.js";
 import {
   AccountNotFoundError,
   InsufficientFundsError,
+  SameAccountTransferError,
 } from "../src/domain/errors.js";
 
 describe("Bank", () => {
@@ -75,6 +76,73 @@ describe("Bank", () => {
 
       expect(() => bank.withdraw("100", 21)).toThrow(InsufficientFundsError);
       expect(bank.balance("100")).toBe(20);
+    });
+  });
+
+  describe("transfer", () => {
+    it("moves the amount from origin to a newly created destination", () => {
+      bank.deposit("100", 15);
+
+      const result = bank.transfer("100", "300", 15);
+
+      expect(result).toEqual({
+        origin: { id: "100", balance: 0 },
+        destination: { id: "300", balance: 15 },
+      });
+      expect(bank.balance("100")).toBe(0);
+      expect(bank.balance("300")).toBe(15);
+    });
+
+    it("adds to the balance of an existing destination", () => {
+      bank.deposit("100", 15);
+      bank.deposit("300", 5);
+
+      bank.transfer("100", "300", 10);
+
+      expect(bank.balance("100")).toBe(5);
+      expect(bank.balance("300")).toBe(15);
+    });
+
+    it("throws AccountNotFoundError and does not create the destination", () => {
+      expect(() => bank.transfer("200", "300", 15)).toThrow(
+        AccountNotFoundError,
+      );
+      expect(() => bank.balance("300")).toThrow(AccountNotFoundError);
+    });
+
+    it("changes nothing when the origin has insufficient funds", () => {
+      bank.deposit("100", 10);
+      bank.deposit("300", 5);
+
+      expect(() => bank.transfer("100", "300", 11)).toThrow(
+        InsufficientFundsError,
+      );
+      expect(bank.balance("100")).toBe(10);
+      expect(bank.balance("300")).toBe(5);
+    });
+
+    it("does not create the destination when the transfer fails", () => {
+      bank.deposit("100", 10);
+
+      expect(() => bank.transfer("100", "300", 11)).toThrow(
+        InsufficientFundsError,
+      );
+      expect(() => bank.balance("300")).toThrow(AccountNotFoundError);
+    });
+
+    it("rejects a transfer to the same account and keeps the balance", () => {
+      bank.deposit("100", 10);
+
+      expect(() => bank.transfer("100", "100", 5)).toThrow(
+        SameAccountTransferError,
+      );
+      expect(bank.balance("100")).toBe(10);
+    });
+
+    it("rejects a same-account transfer before checking the account exists", () => {
+      expect(() => bank.transfer("999", "999", 5)).toThrow(
+        SameAccountTransferError,
+      );
     });
   });
 });
