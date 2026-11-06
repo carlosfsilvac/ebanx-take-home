@@ -157,15 +157,22 @@ processing, so two concurrent retries cannot both run).
 
 ## Publishing for the EBANX test suite
 
-The suite needs a public URL. Run the server locally and expose it with
-[ngrok](https://ngrok.com/):
+The suite needs a public URL. Run the server locally and expose it with a
+[Cloudflare quick tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/trycloudflare/),
+which needs no account:
 
 ```bash
 npm run build && npm start
-ngrok http 3000
 ```
 
-Then give the `https://...ngrok...` URL to the test suite.
+In another terminal:
+
+```bash
+cloudflared tunnel --url http://localhost:3000
+```
+
+Then give the printed `https://<random>.trycloudflare.com` URL to the test
+suite. Any tunnel works the same way, e.g. `ngrok http 3000`.
 
 ## Limitations
 
