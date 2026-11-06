@@ -3,6 +3,7 @@ import { Bank } from "../src/domain/bank.js";
 import {
   AccountNotFoundError,
   InsufficientFundsError,
+  InvalidAmountError,
   SameAccountTransferError,
 } from "../src/domain/errors.js";
 
@@ -143,6 +144,56 @@ describe("Bank", () => {
       expect(() => bank.transfer("999", "999", 5)).toThrow(
         SameAccountTransferError,
       );
+    });
+  });
+
+  describe("amount validation", () => {
+    const invalidAmounts = [
+      ["zero", 0],
+      ["negative", -5],
+      ["decimal", 1.5],
+      ["NaN", Number.NaN],
+      ["Infinity", Number.POSITIVE_INFINITY],
+      ["above MAX_SAFE_INTEGER", Number.MAX_SAFE_INTEGER + 1],
+    ] as const;
+
+    it.each(invalidAmounts)(
+      "deposit rejects amount: %s (account not created)",
+      (_label, amount) => {
+        expect(() => bank.deposit("100", amount)).toThrow(InvalidAmountError);
+        expect(() => bank.balance("100")).toThrow(AccountNotFoundError);
+      },
+    );
+
+    it.each(invalidAmounts)(
+      "withdraw rejects amount: %s (balance kept)",
+      (_label, amount) => {
+        bank.deposit("100", 10);
+
+        expect(() => bank.withdraw("100", amount)).toThrow(InvalidAmountError);
+        expect(bank.balance("100")).toBe(10);
+      },
+    );
+
+    it.each(invalidAmounts)(
+      "transfer rejects amount: %s (nothing changes)",
+      (_label, amount) => {
+        bank.deposit("100", 10);
+
+        expect(() => bank.transfer("100", "300", amount)).toThrow(
+          InvalidAmountError,
+        );
+        expect(bank.balance("100")).toBe(10);
+        expect(() => bank.balance("300")).toThrow(AccountNotFoundError);
+      },
+    );
+
+    it("checks the amount before the account exists on withdraw", () => {
+      expect(() => bank.withdraw("200", 0)).toThrow(InvalidAmountError);
+    });
+
+    it("checks the amount before the same-account rule on transfer", () => {
+      expect(() => bank.transfer("100", "100", 0)).toThrow(InvalidAmountError);
     });
   });
 });

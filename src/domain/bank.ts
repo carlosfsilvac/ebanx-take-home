@@ -1,6 +1,7 @@
 import {
   AccountNotFoundError,
   InsufficientFundsError,
+  InvalidAmountError,
   SameAccountTransferError,
 } from "./errors.js";
 
@@ -26,11 +27,13 @@ export class Bank {
   }
 
   deposit(accountId: string, amount: number): Account {
+    assertValidAmount(amount);
     const current = this.#balances.get(accountId) ?? 0;
     return this.#setBalance(accountId, current + amount);
   }
 
   withdraw(accountId: string, amount: number): Account {
+    assertValidAmount(amount);
     const current = this.balance(accountId);
     if (amount > current) {
       throw new InsufficientFundsError(accountId, current, amount);
@@ -43,6 +46,7 @@ export class Bank {
     destinationId: string,
     amount: number,
   ): TransferResult {
+    assertValidAmount(amount);
     if (originId === destinationId) {
       throw new SameAccountTransferError(originId);
     }
@@ -57,5 +61,13 @@ export class Bank {
   #setBalance(accountId: string, balance: number): Account {
     this.#balances.set(accountId, balance);
     return { id: accountId, balance };
+  }
+}
+
+// Safe integers only: beyond 2^53 a number can no longer represent every
+// integer, so balances would silently lose precision.
+function assertValidAmount(amount: number): void {
+  if (!Number.isSafeInteger(amount) || amount <= 0) {
+    throw new InvalidAmountError(amount);
   }
 }

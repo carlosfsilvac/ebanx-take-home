@@ -24,3 +24,10 @@ export class SameAccountTransferError extends Error {
     this.name = "SameAccountTransferError";
   }
 }
+
+export class InvalidAmountError extends Error {
+  constructor(readonly amount: number) {
+    super(`Amount must be a positive integer, got ${amount}`);
+    this.name = "InvalidAmountError";
+  }
+}
