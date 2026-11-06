@@ -58,6 +58,10 @@ export class Bank {
     return { origin, destination };
   }
 
+  reset(): void {
+    this.#balances.clear();
+  }
+
   #setBalance(accountId: string, balance: number): Account {
     this.#balances.set(accountId, balance);
     return { id: accountId, balance };

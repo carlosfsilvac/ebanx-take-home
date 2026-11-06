@@ -196,4 +196,16 @@ describe("Bank", () => {
       expect(() => bank.transfer("100", "100", 0)).toThrow(InvalidAmountError);
     });
   });
+
+  describe("reset", () => {
+    it("removes every account", () => {
+      bank.deposit("100", 10);
+      bank.deposit("300", 5);
+
+      bank.reset();
+
+      expect(() => bank.balance("100")).toThrow(AccountNotFoundError);
+      expect(() => bank.balance("300")).toThrow(AccountNotFoundError);
+    });
+  });
 });
