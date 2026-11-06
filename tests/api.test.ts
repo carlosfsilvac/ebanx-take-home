@@ -3,12 +3,8 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { Bank } from "../src/domain/bank.js";
 import { buildApp } from "../src/http/app.js";
 
-function postEvent(app: FastifyInstance, event: unknown) {
-  return app.inject({
-    method: "POST",
-    url: "/event",
-    payload: event as object,
-  });
+function postEvent(app: FastifyInstance, event?: object) {
+  return app.inject({ method: "POST", url: "/event", payload: event });
 }
 
 function getBalance(app: FastifyInstance, accountId: string) {
