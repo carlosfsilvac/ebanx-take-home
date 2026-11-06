@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { Bank } from "../src/domain/bank.js";
-import { AccountNotFoundError } from "../src/domain/errors.js";
+import {
+  AccountNotFoundError,
+  InsufficientFundsError,
+} from "../src/domain/errors.js";
 
 describe("Bank", () => {
   let bank: Bank;
@@ -43,6 +46,35 @@ describe("Bank", () => {
 
       expect(bank.balance("100")).toBe(10);
       expect(bank.balance("300")).toBe(5);
+    });
+  });
+
+  describe("withdraw", () => {
+    it("throws AccountNotFoundError and does not create the account", () => {
+      expect(() => bank.withdraw("200", 10)).toThrow(AccountNotFoundError);
+      expect(() => bank.balance("200")).toThrow(AccountNotFoundError);
+    });
+
+    it("subtracts the amount from the balance", () => {
+      bank.deposit("100", 20);
+
+      const account = bank.withdraw("100", 5);
+
+      expect(account).toEqual({ id: "100", balance: 15 });
+      expect(bank.balance("100")).toBe(15);
+    });
+
+    it("allows withdrawing the whole balance", () => {
+      bank.deposit("100", 20);
+
+      expect(bank.withdraw("100", 20)).toEqual({ id: "100", balance: 0 });
+    });
+
+    it("throws InsufficientFundsError and keeps the balance unchanged", () => {
+      bank.deposit("100", 20);
+
+      expect(() => bank.withdraw("100", 21)).toThrow(InsufficientFundsError);
+      expect(bank.balance("100")).toBe(20);
     });
   });
 });

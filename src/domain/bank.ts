@@ -1,4 +1,4 @@
-import { AccountNotFoundError } from "./errors.js";
+import { AccountNotFoundError, InsufficientFundsError } from "./errors.js";
 
 export interface Account {
   readonly id: string;
@@ -17,7 +17,19 @@ export class Bank {
   }
 
   deposit(accountId: string, amount: number): Account {
-    const balance = (this.#balances.get(accountId) ?? 0) + amount;
+    const current = this.#balances.get(accountId) ?? 0;
+    return this.#setBalance(accountId, current + amount);
+  }
+
+  withdraw(accountId: string, amount: number): Account {
+    const current = this.balance(accountId);
+    if (amount > current) {
+      throw new InsufficientFundsError(accountId, current, amount);
+    }
+    return this.#setBalance(accountId, current - amount);
+  }
+
+  #setBalance(accountId: string, balance: number): Account {
     this.#balances.set(accountId, balance);
     return { id: accountId, balance };
   }

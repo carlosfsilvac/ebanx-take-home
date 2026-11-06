@@ -4,3 +4,16 @@ export class AccountNotFoundError extends Error {
     this.name = "AccountNotFoundError";
   }
 }
+
+export class InsufficientFundsError extends Error {
+  constructor(
+    readonly accountId: string,
+    readonly balance: number,
+    readonly amount: number,
+  ) {
+    super(
+      `Account ${accountId} has balance ${balance}, cannot withdraw ${amount}`,
+    );
+    this.name = "InsufficientFundsError";
+  }
+}
